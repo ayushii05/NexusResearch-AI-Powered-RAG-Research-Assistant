@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || ''
+).replace(/\/$/, '');
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -142,15 +145,25 @@ export function AuthProvider({ children }) {
   const clearError = () => setAuthError(null);
 
   // Authenticated fetch helper
+  // Authenticated fetch helper
   const authFetch = useCallback(
     async (url, options = {}) => {
       const headers = {
         ...options.headers,
       };
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      return fetch(url, { ...options, headers });
+
+      const requestUrl = url.startsWith('http')
+        ? url
+        : `${API_BASE_URL}${url}`;
+
+      return fetch(requestUrl, {
+        ...options,
+        headers,
+      });
     },
     [token]
   );
