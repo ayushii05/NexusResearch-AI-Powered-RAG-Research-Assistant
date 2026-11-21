@@ -21,7 +21,34 @@ if _NVIDIA_API_KEY:
         base_url="https://integrate.api.nvidia.com/v1",
         api_key=_NVIDIA_API_KEY
     )
+def create_embeddings(
+    texts: list[str],
+    input_type: str = "passage"
+) -> list[list[float]]:
 
+    if not _client:
+        raise RuntimeError(
+            "NVIDIA_API_KEY is not configured."
+        )
+
+    if not texts:
+        return []
+
+    response = _client.embeddings.create(
+        model="nvidia/nemotron-3.5-embed-1b",
+        input=texts,
+        extra_body={
+            "input_type": input_type,
+            "truncate": "END"
+        }
+    )
+
+    results = sorted(
+        response.data,
+        key=lambda item: item.index
+    )
+
+    return [item.embedding for item in results]
 
 def _build_system_prompt(retrieved_chunks: list[dict]) -> str:
     if not retrieved_chunks:
@@ -55,6 +82,8 @@ def _build_system_prompt(retrieved_chunks: list[dict]) -> str:
 
 def _run_nvidia_stream_sync(messages: list[dict]):
     """Blocking call to the OpenAI SDK — must be run in a thread executor."""
+    assert _client is not None
+    # pyrefly: ignore[no-matching-overload]
     return _client.chat.completions.create(
         model=_MODEL,
         messages=messages,

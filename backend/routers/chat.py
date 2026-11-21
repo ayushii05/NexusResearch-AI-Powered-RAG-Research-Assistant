@@ -33,6 +33,7 @@ def _generate_title_sync(message: str) -> str:
             ],
             max_tokens=15,
         )
+        # pyrefly: ignore[missing-attribute]
         title = resp.choices[0].message.content.strip().strip('"').strip("'")
         return title if title else "New Project"
     except Exception:
@@ -48,7 +49,11 @@ async def chat(request: ChatRequest) -> StreamingResponse:
         last_user_msg = getattr(user_messages[-1], "content", user_messages[-1].get("content") if isinstance(user_messages[-1], dict) else "")
         search_query = f"{last_user_msg}\n{request.message}"
 
-    retrieved_chunks = vector_store.query(request.project_id, search_query, top_k=15)
+    retrieved_chunks = vector_store.query(
+    request.project_id,
+    search_query,
+    top_k=5
+)
 
     citations = [
         {

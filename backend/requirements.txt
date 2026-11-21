@@ -3,7 +3,6 @@ uvicorn[standard]
 openai
 python-dotenv
 chromadb
-sentence-transformers
 pypdf
 beautifulsoup4
 requests
