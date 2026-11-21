@@ -1,6 +1,7 @@
 # NexusResearch
 
  Multi-Source RAG Workspace. You drop in PDFs, web articles, and YouTube links. Local CPU embeddings index them into isolated project namespaces. An async FastAPI backend streams grounded, cited answers token-by-token from NVIDIA's Llama 3.1. No embedding API bills, and no context bleeding between projects.
+ 
 🌐 **Live Demo:** https://nexus-research-ai-powered-rag-resea.vercel.app/
 
 ## The core idea
