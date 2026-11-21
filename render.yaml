@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: nexusresearch-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+<<<<<<< HEAD
+        sync: false
+=======
+        sync: false
+>>>>>>> fadaa1cba73b508ed1e699627eaefec1b14b1270
