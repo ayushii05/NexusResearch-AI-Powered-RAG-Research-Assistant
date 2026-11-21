@@ -1,9 +1,28 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const API_BASE_URL = (
-  import.meta.env.VITE_API_URL || ''
+const rawApiUrl = import.meta.env.VITE_API_URL;
+
+console.log("VITE_API_URL:", rawApiUrl);
+
+export const API_BASE_URL = (
+  rawApiUrl || ''
 ).replace(/\/$/, '');
+
+console.log("API_BASE_URL:", API_BASE_URL);
+
 const AuthContext = createContext(null);
+
+const safeParseJson = async (res) => {
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    try {
+      return await res.json();
+    } catch {
+      // ignore JSON parse error
+    }
+  }
+  return null;
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -21,16 +40,19 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        const res = await fetch('/api/auth/me', {
+        const url = `${API_BASE_URL}/api/auth/me`;
+        const res = await fetch(url, {
           headers: {
             Authorization: `Bearer ${storedToken}`,
           },
         });
 
         if (res.ok) {
-          const userData = await res.json();
-          setUser(userData);
-          setToken(storedToken);
+          const userData = await safeParseJson(res);
+          if (userData) {
+            setUser(userData);
+            setToken(storedToken);
+          }
         } else {
           // Token invalid or expired
           localStorage.removeItem('nexus_auth_token');
@@ -51,16 +73,26 @@ export function AuthProvider({ children }) {
   const login = async (email, password, rememberMe = true) => {
     setAuthError(null);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const url = `${API_BASE_URL}/api/auth/login`;
+      let res;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+      } catch (networkErr) {
+        throw new Error('Unable to connect to server. Please check your internet connection or verify the backend is running.');
+      }
 
-      const data = await res.json();
+      const data = await safeParseJson(res);
 
       if (!res.ok) {
-        throw new Error(data.detail || 'Login failed. Please check your credentials.');
+        throw new Error(data?.detail || `Login failed (${res.status}). Please check your credentials.`);
+      }
+
+      if (!data) {
+        throw new Error('Server returned an unexpected response. Please try again.');
       }
 
       const { token: receivedToken, user: receivedUser } = data;
@@ -85,16 +117,26 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password) => {
     setAuthError(null);
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
+      const url = `${API_BASE_URL}/api/auth/register`;
+      let res;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password }),
+        });
+      } catch (networkErr) {
+        throw new Error('Unable to connect to server. Please check your internet connection or verify the backend is running.');
+      }
 
-      const data = await res.json();
+      const data = await safeParseJson(res);
 
       if (!res.ok) {
-        throw new Error(data.detail || 'Registration failed. Please try again.');
+        throw new Error(data?.detail || `Registration failed (${res.status}). Please try again.`);
+      }
+
+      if (!data) {
+        throw new Error('Server returned an unexpected response. Please try again.');
       }
 
       const { token: receivedToken, user: receivedUser } = data;
@@ -112,14 +154,24 @@ export function AuthProvider({ children }) {
   const loginAsGuest = async () => {
     setAuthError(null);
     try {
-      const res = await fetch('/api/auth/guest', {
-        method: 'POST',
-      });
+      const url = `${API_BASE_URL}/api/auth/guest`;
+      let res;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+        });
+      } catch (networkErr) {
+        throw new Error('Unable to connect to server. Please check your internet connection or verify the backend is running.');
+      }
 
-      const data = await res.json();
+      const data = await safeParseJson(res);
 
       if (!res.ok) {
-        throw new Error(data.detail || 'Guest login failed.');
+        throw new Error(data?.detail || `Guest login failed (${res.status}).`);
+      }
+
+      if (!data) {
+        throw new Error('Server returned an unexpected response. Please try again.');
       }
 
       const { token: receivedToken, user: receivedUser } = data;

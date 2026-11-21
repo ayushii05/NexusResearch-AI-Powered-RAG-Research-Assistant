@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import UploadMenu from './UploadMenu.jsx';
 import SourcesSlideOver from './SourcesSlideOver.jsx';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { API_BASE_URL } from '../context/AuthContext.jsx';
 
 const TYPE_ICON = {
   pdf: FileText,
@@ -87,7 +88,8 @@ export default function ChatPanel({ projectId, messages, setMessages, isStreamin
     setMessages([...messages, userMessage, { role: 'assistant', content: '', citations: [] }]);
 
     try {
-      const response = await fetch('/api/chat', {
+      const chatUrl = `${API_BASE_URL}/api/chat`;
+      const response = await fetch(chatUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: projectId, message: userMessage.content, chat_history: chatHistory }),

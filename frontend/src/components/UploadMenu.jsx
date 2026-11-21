@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Link as LinkIcon, Play, Loader2, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext.jsx';
+import { API_BASE_URL } from '../context/AuthContext.jsx';
 
 const isLikelyUrl = (value) => {
   try {
@@ -38,7 +39,7 @@ export default function UploadMenu({ projectId, onSourceAdded, isOpen, onClose }
       formData.append('project_id', projectId);
       formData.append('file', file);
 
-      const response = await fetch('/api/ingest/pdf', {
+      const response = await fetch(`${API_BASE_URL}/api/ingest/pdf`, {
         method: 'POST',
         body: formData,
       });
@@ -71,7 +72,7 @@ export default function UploadMenu({ projectId, onSourceAdded, isOpen, onClose }
 
     setUrlLoading(true);
     try {
-      const response = await fetch('/api/ingest/url', {
+      const response = await fetch(`${API_BASE_URL}/api/ingest/url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: projectId, url }),
@@ -105,7 +106,7 @@ export default function UploadMenu({ projectId, onSourceAdded, isOpen, onClose }
 
     setYoutubeLoading(true);
     try {
-      const response = await fetch('/api/ingest/youtube', {
+      const response = await fetch(`${API_BASE_URL}/api/ingest/youtube`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: projectId, url }),
